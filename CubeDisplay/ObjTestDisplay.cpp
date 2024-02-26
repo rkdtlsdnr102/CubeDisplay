@@ -19,7 +19,7 @@ const char* title = "OBJ TEST DISPLAY";
 #define DEFAULT_ARRAY_BUFFER 0
 
 const char* vtxShader =
-"#version 330\n"
+"#version 400\n"
 "uniform mat4 u_MVP;\n"
 "layout(location = 0) in vec3 vPos;\n"
 "void main()\n"
@@ -29,7 +29,7 @@ const char* vtxShader =
 "}\n";
 
 const char* fragShader =
-"#version 330\n"
+"#version 400\n"
 "uniform vec3 custom_color;\n"
 "out vec4 FragColor;\n"
 "void main()\n"
@@ -195,11 +195,11 @@ static float cube_vtx[] = { 0.25,-0.25,0.25 };
 
 void CObjTestDisplay::SetupBuffersAndObject()
 {
-	CShapeFactory& shapeFactory = CShapeFactory::GetInstance<CWireShapeFactory>();
-	m_Shape = shapeFactory.CreateCube();
-	
-	/*CShapeFactory& shapeFactory = CShapeFactory::GetInstance<CSolidShapeFactory>();
+	/*CShapeFactory& shapeFactory = CShapeFactory::GetInstance<CWireShapeFactory>();
 	m_Shape = shapeFactory.CreateCube();*/
+	
+	CShapeFactory& shapeFactory = CShapeFactory::GetInstance<CSolidShapeFactory>();
+	m_Shape = shapeFactory.CreateCube();
 	
 
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -258,13 +258,13 @@ void CObjTestDisplay::UpdateDisplay()
 	while (!glfwWindowShouldClose(m_pGFWindow))
 	{
 		int width, height;
-		float ratio;
+		//float ratio;
 		
 		glfwGetFramebufferSize(m_pGFWindow, &width, &height);
 
-		ratio = width / (float)height;
+		//ratio = width / (float)height;
 
-		glViewport(0, 0, width, height);
+		//glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		//MVP matrix를 구성하여 vertex shader로 넘겨준다.

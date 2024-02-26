@@ -17,23 +17,13 @@ inline void UpdateYaw(float& rad, float drad)
 	rad += drad;
 }
 
-// z축 회전
-inline void GetRotateMatZ(Eigen::Matrix4f& rotMat,float rad)
-{
-	rotMat.setIdentity();
-
-	rotMat(0, 0) = cos(rad);
-	rotMat(0, 1) = -sin(rad);
-	rotMat(1, 0) = sin(rad);
-	rotMat(1, 1) = cos(rad);
-}
-
 void Camera::UpdateVec()
 {
 	// https://learnopengl.com/Getting-started/Camera
 	// 위 문서에서 나온 것중 dirvec의 방향을 실제 target을 바라보도록 설정
 	// 직관적으로 표현하기 위함
 	m_dirvec = m_target - m_pos;
+	m_dirvec.normalize();
 	m_rightvec = m_dirvec.cross3(m_up);
 	m_rightvec.normalize();
 	m_upvec = m_rightvec.cross3(m_dirvec);
@@ -43,7 +33,7 @@ void Camera::UpdateVec()
 
 void Camera::UpdateMat()
 {
-	Eigen::Matrix<float, 4, 4, Eigen::RowMajor> rotmatInv, translateMatInv;
+	Eigen::Matrix<float, 4, 4, Eigen::RowMajor> rotmatInv, translateMatInv, perspective;
 
 	rotmatInv.setIdentity();
 	rotmatInv.row(0) = m_rightvec;
@@ -56,7 +46,17 @@ void Camera::UpdateMat()
 	translateMatInv.col(3) = -m_pos;
 	translateMatInv(3, 3) = 1;
 
-	m_MVP = rotmatInv * translateMatInv ;
+	perspective.setZero();
+	perspective(0, 0) = 2 * m_near / (m_right - m_left);
+	perspective(0, 2) = (m_right + m_left) / (m_right - m_left);
+	perspective(1, 1) = 2 * m_near / (m_top - m_bottom);
+	perspective(1, 2) = (m_top + m_bottom) / (m_top - m_bottom);
+	perspective(2, 2) = -(m_far + m_near) / (m_far - m_near);
+	perspective(2, 3) = -2 * (m_far * m_near) / (m_far - m_near);
+	perspective(3, 2) = -1;
+
+
+	m_MVP = perspective * rotmatInv * translateMatInv;
 }
 
 void Camera::Init()
@@ -68,6 +68,13 @@ void Camera::Init()
 
 	yaw = -90.0f;
 	pitch = 180.0f; // dir의 방향이 target을 바라보는 방향이므로
+
+	m_near = 0.5;
+	m_far = 50;
+	m_left = -1;
+	m_right = 1;
+	m_bottom = -1;
+	m_top = 1;
 
 	UpdateVec();
 }
@@ -120,6 +127,18 @@ void Camera::Translate(const Eigen::Vector4f& _right, const Eigen::Vector4f& _up
 	m_target -= _up;
 
 	UpdateVec();
+}
+
+void Camera::SetPerspective(float left, float bottom, float right, float top, float near, float far)
+{
+	m_left = left;
+	m_right = right;
+	m_bottom = bottom;
+	m_top = top;
+	m_near = near;
+	m_far = far;
+
+	UpdateMat();
 }
 
 const float* Camera::GetMVPMat() const
